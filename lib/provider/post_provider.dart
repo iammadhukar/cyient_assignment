@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import "package:http/http.dart" as http;
 import 'dart:convert' as convert;
 
+import '../models/post.dart';
 import '../models/user.dart';
 
 class PostProvider extends ChangeNotifier {
@@ -11,6 +12,9 @@ class PostProvider extends ChangeNotifier {
 
   List<User>? _users;
   List<User>? get users => _users;
+
+  List<Post>? _posts;
+  List<Post>? get posts => _posts;
 
   ///Getting all users data
   getUsers() async {
@@ -29,5 +33,26 @@ class PostProvider extends ChangeNotifier {
         _users!.add(User.fromJson(element));
       });
     }
+  }
+
+  ///Getting all post data
+  getAllPost() async {
+    var uri = Uri.parse(baseUrl + '/posts');
+    Map<String, String> header = {
+      'Content-Type': 'application/json',
+      'Charset': 'utf-8',
+      "Accept": "application/json",
+    };
+    var response = await http.get(uri, headers: header);
+    _posts = [];
+    if (response.statusCode == 200) {
+      var json = convert.jsonDecode(response.body);
+
+      json.forEach((element) {
+        User user = users!.firstWhere((u) => u.id == element['userId']);
+        _posts!.add(Post.fromJson(element, user));
+      });
+    }
+    notifyListeners();
   }
 }
